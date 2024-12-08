@@ -12,13 +12,12 @@ import Compatibility from '@components/plugins/Compatibility.astro';
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 import CommandTabs from '@components/CommandTabs.astro';
-import PluginPermissions from '@components/PluginPermissions.astro';
 
 <PluginLinks plugin={frontmatter.plugin} />
 
 Los diálogos nativos del sistema para abrir y guardar archivos junto con diálogos de mensajes.
 
-## Plataformas Compatibles
+## Supported Platforms
 
 <Compatibility plugin={frontmatter.plugin} />
 
@@ -34,23 +33,17 @@ Instala el plugin de diálogo para comenzar.
     <CommandTabs npm="npm run tauri add dialog"
                     yarn="yarn run tauri add dialog"
                     pnpm="pnpm tauri add dialog"
-                    bun="bun tauri add dialog"
                     cargo="cargo tauri add dialog" />
 
     </TabItem>
     <TabItem label="Manual">
 
-      <Steps>
-
-    1. Ejecuta el siguiente comando en la carpeta `src-tauri` para agregar el plugin a las dependencias del proyecto en `Cargo.toml`:
-
-      ```sh frame=none
-      cargo add tauri-plugin-dialog
-      ```
+    1. Ejecuta `cargo add tauri-plugin-dialog` para agregar el plugin a las dependencias del proyecto en `Cargo.toml`.
 
     2. Modifica `lib.rs` para inicializar el plugin:
 
-    ```rust title="src-tauri/src/lib.rs" ins={4}
+    ```rust
+    // lib.rs
     #[cfg_attr(mobile, tauri::mobile_entry_point)]
     pub fn run() {
         tauri::Builder::default()
@@ -67,9 +60,8 @@ Instala el plugin de diálogo para comenzar.
                     npm="npm install @tauri-apps/plugin-dialog"
                     yarn="yarn add @tauri-apps/plugin-dialog"
                     pnpm="pnpm add @tauri-apps/plugin-dialog"
-                    bun="bun add @tauri-apps/plugin-dialog"
                 />
-  </Steps>
+
 </TabItem>
 </Tabs>
 
@@ -91,19 +83,13 @@ en Rust:
 - [Construir un diálogo de mensaje](#construir-un-diálogo-de-mensaje)
 - [Construir un diálogo de selección de archivos](#construir-un-diálogo-de-selección-de-archivos)
 
-:::note
-Los APIs de diálogo de archivo devuelven rutas del sistema de archivos en Linux, Windows y macOS.
-
-En iOS, se devuelven URIs de tipo `file://<path>`.
-
-En Android, se devuelven [URIs de contenido].
-
-El [plugin de sistema de archivos] funciona con cualquier formato de ruta por defecto.
-:::
+---
 
 ### JavaScript
 
 Consulta todas las [Opciones de diálogo](/reference/javascript/dialog/) en la referencia de la API de JavaScript.
+
+{/* ASK */}
 
 #### Crear un diálogo de Si/No
 
@@ -111,8 +97,6 @@ Muestra un diálogo de pregunta con botones `Yes` y `No`.
 
 ```javascript
 import { ask } from '@tauri-apps/plugin-dialog';
-// cuando se usa `"withGlobalTauri": true`, puedes utilizar lo siguiente:
-// const { ask } = window.__TAURI__.dialog;
 
 // Crea un diálogo de Sí/No
 const answer = await ask('This action cannot be reverted. Are you sure?', {
@@ -124,14 +108,14 @@ console.log(answer);
 // Imprime un booleano en la consola
 ```
 
+{/* CONFIRM */}
+
 #### Crear un diálogo de Ok/Cancelar
 
 Muestra un diálogo de pregunta con botones `Ok` y `Cancel`.
 
 ```javascript
 import { confirm } from '@tauri-apps/plugin-dialog';
-// cuando se usa `"withGlobalTauri": true`, puedes utilizar lo siguiente:
-// const { confirm } = window.__TAURI__.dialog;
 
 // Crea un diálogo de confirmación Ok/Cancelar
 const confirmation = await confirm(
@@ -143,18 +127,20 @@ console.log(confirmation);
 // Imprime un booleano en la consola
 ```
 
+{/* MESSAGE */}
+
 #### Crear un diálogo de mensaje
 
 Muestra un diálogo de mensaje con un botón `Ok`. Ten en cuenta que si el usuario cierra el diálogo, devolverá `false`.
 
 ```javascript
 import { message } from '@tauri-apps/plugin-dialog';
-// cuando se usa `"withGlobalTauri": true`, puedes utilizar lo siguiente:
-// const { message } = window.__TAURI__.dialog;
 
 // Muestra un mensaje
 await message('File not found', { title: 'Tauri', type: 'error' });
 ```
+
+{/* OPEN */}
 
 #### Abrir un diálogo de selección de archivos
 
@@ -164,8 +150,6 @@ La opción `multiple` controla si el diálogo permite la selección múltiple o 
 
 ```javascript
 import { open } from '@tauri-apps/plugin-dialog';
-// cuando se usa `"withGlobalTauri": true`, puedes utilizar lo siguiente:
-// const { open } = window.__TAURI__.dialog;
 
 // Abre un diálogo
 const file = await open({
@@ -173,8 +157,10 @@ const file = await open({
   directory: false,
 });
 console.log(file);
-// Imprime la ruta del archivo o el URI
+// Imprime la ruta y el nombre del archivo en la consola
 ```
+
+{/* SAVE */}
 
 #### Diálogo de guardar en archivo
 
@@ -182,9 +168,6 @@ Abre un diálogo de guardar archivo/directorio.
 
 ```javascript
 import { save } from '@tauri-apps/plugin-dialog';
-// cuando se usa `"withGlobalTauri": true`, puedes utilizar lo siguiente:
-// const { save } = window.__TAURI__.dialog;
-
 // Indica para guardar un 'My Filter' con extensión .png o .jpeg
 const path = await save({
   filters: [
@@ -209,24 +192,26 @@ Consulta la [referencia de la API de Rust](https://docs.rs/tauri-plugin-dialog/)
 Muestra una diálogo de pregunta con botones `Absolutely` y `Totally`.
 
 ```rust
-use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
+use tauri_plugin_dialog::DialogExt;
 
 let answer = app.dialog()
         .message("Tauri is Awesome")
         .title("Tauri is Awesome")
-        .buttons(MessageDialogButtons::OkCancelCustom("Absolutely", "Totally"))
+        .ok_button_label("Absolutely")
+        .cancel_button_label("Totally")
         .blocking_show();
 ```
 
 Si necesitas una operación no bloqueante puedes usar `show()` en su lugar:
 
 ```rust
-use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
+use tauri_plugin_dialog::DialogExt;
 
 app.dialog()
     .message("Tauri is Awesome")
     .title("Tauri is Awesome")
-   .buttons(MessageDialogButtons::OkCancelCustom("Absolutely", "Totally"))
+    .ok_button_label("Absolutely")
+    .cancel_button_label("Totally")
     .show(|result| match result {
         true => // hacer algo,
         false =>// hacer algo,
@@ -250,13 +235,13 @@ let ans = app.dialog()
 Si necesitas una operación no bloqueante puedes usar `show()` en su lugar:
 
 ```rust
-use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
+use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
 app.dialog()
     .message("Tauri is Awesome")
     .kind(MessageDialogKind::Info)
     .title("Information")
-    .buttons(MessageDialogButtons::OkCustom("Absolutely"))
+    .ok_button_label("Absolutely")
     .show(|result| match result {
         true => // hacer algo,
         false => // hacer algo,
@@ -310,8 +295,3 @@ app.dialog()
         // devuelve un `Option` de file_path, o `None` si el usuario cierra el diálogo
     });
 ```
-
-<PluginPermissions plugin={frontmatter.plugin} />
-
-[URIs de contenido]: https://developer.android.com/guide/topics/providers/content-provider-basics
-[plugin de sistema de archivos]: /plugin/file-system/
